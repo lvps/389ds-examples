@@ -7,8 +7,8 @@
       suffix: "dc=example,dc=local"
       rootdn_password: secret
       tls_enabled: true
-      tls_cert_file: "ca/test_cert.pem"
-      tls_key_file: "ca/test_key.pem"
+      tls_cert_file: "ca/ldaptest_example_local_cert.pem"
+      tls_key_file: "ca/ldaptest_example_local.key"
       tls_files_remote: false
       tls_certificate_trusted: false
       tls_enforced: true
