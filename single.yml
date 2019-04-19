@@ -1,0 +1,23 @@
+---
+- hosts: all
+  become: true
+  roles:
+    -
+      role: 389ds-server
+      suffix: "dc=example,dc=local"
+      rootdn_password: secret
+      tls_enabled: true
+      tls_cert_file: "ca/test_cert.pem"
+      tls_key_file: "ca/test_key.pem"
+      tls_files_remote: false
+      tls_certificate_trusted: false
+      tls_enforced: true
+      password_storage_scheme: "PBKDF2_SHA256"
+      plugins_enabled:
+        MemberOf Plugin: true
+        Distributed Numeric Assignment Plugin: false
+      custom_schema:
+      - "/S/Software/389ds-test-2/schema/97schac.ldif"
+      - "/S/Software/389ds-test-2/schema/98ssh.ldif"
+      - "/S/Software/389ds-test-2/schema/98telegram.ldif"
+      - "/S/Software/389ds-test-2/schema/98weeeopen.ldif"

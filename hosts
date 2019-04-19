@@ -1,0 +1,9 @@
+#
+# Managed by Ansible
+#
+
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+10.38.9.99  ldaptest.example.local
+10.38.9.10  ldap1.example.local
+10.38.9.20  ldap2.example.local
