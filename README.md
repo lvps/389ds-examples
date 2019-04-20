@@ -25,6 +25,8 @@ cd ca
 ./cert.sh ldaptest.example.local
 ```
 
+This will create `ca/ldaptest_example_local_cert.pem` and `ldaptest_example_local.key`.
+
 Then start the VM:
 
 ```shell
