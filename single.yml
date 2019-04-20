@@ -17,7 +17,7 @@
         MemberOf Plugin: true
         Distributed Numeric Assignment Plugin: false
       custom_schema:
-      - "/S/Software/389ds-test-2/schema/97schac.ldif"
-      - "/S/Software/389ds-test-2/schema/98ssh.ldif"
-      - "/S/Software/389ds-test-2/schema/98telegram.ldif"
-      - "/S/Software/389ds-test-2/schema/98weeeopen.ldif"
+      - "schema/97schac.ldif"
+      - "schema/98ssh.ldif"
+      - "schema/98telegram.ldif"
+      - "schema/98weeeopen.ldif"
