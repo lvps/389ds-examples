@@ -7,3 +7,4 @@
 10.38.9.99  ldaptest.example.local
 10.38.9.10  ldap1.example.local
 10.38.9.20  ldap2.example.local
+10.38.9.199 keycloak.example.local

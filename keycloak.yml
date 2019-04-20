@@ -1,0 +1,13 @@
+---
+- hosts: keycloak
+  roles:
+    # ansible-galaxy install -p roles nkinder.keycloak
+    - {
+        role: nkinder.keycloak,
+        keycloak_version: "6.0.0",
+        keycloak_admin_password: "password"
+      }
+  pre_tasks:
+  - name: Set hosts file
+    copy: src=hosts dest=/etc/hosts owner=root group=root
+    become: true

@@ -163,3 +163,26 @@ Or you could just do `vagrant destroy && vagrant up`...
 This certificate juggling is only needed because they are self-signed: if you use
 a certificate from a trusted CA, it shouldn't be needed, but I haven't tested it
 yet.
+
+## Multi-master with 2 masters + Keycloak
+
+It's exactly the same as the example above, you could even switch from one to
+the other without restarting the VMs, but it adds another server with Keycloak.
+
+This doesn't have anything to do with 389DS, so if you don't care about Keycloak
+you can skip this example.
+
+```shell
+export VAGRANT_VAGRANTFILE=Vagrantfile-multimaster-keycloak
+vagrant up
+```
+
+## Coming "soon"
+
+I'll add these examples some day in the future. If you're interested, open an
+issue and I'll try to add them sooner.
+
+- Dedicated supplier + dedicated consumer, possibly the simplest replication scenario
+- 2 masters + 2 read-only replicas, the example from figure 15.2 in the Administration Guide
+- Multi-master with 4 masters in a circle, the example from figure 15.3 in the Administration Guide
+- Something with hubs, maybe? This will require modifications to the role...
