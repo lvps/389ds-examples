@@ -1,0 +1,77 @@
+---
+- hosts: mm2
+  become: true
+
+  vars:
+    other_cert: "ca/ldap1_example_local_cert.pem"
+
+  pre_tasks:
+  - name: Set hosts file
+    copy: src=hosts dest=/etc/hosts owner=root group=root
+
+  roles:
+    -
+      role: 389ds-server
+      suffix: "dc=example,dc=local"
+      rootdn_password: secret2
+      install_suggest: false
+      tls_enabled: true
+      # ./cert.sh ldap2.example.local
+      tls_cert_file: "ca/ldap2_example_local_cert.pem"
+      tls_key_file: "ca/ldap2_example_local.key"
+      tls_files_remote: false
+      tls_certificate_trusted: false
+      tls_enforced: true
+      password_storage_scheme: "PBKDF2_SHA256"
+      plugins_enabled:
+        MemberOf Plugin: true
+        Distributed Numeric Assignment Plugin: false
+      custom_schema:
+      - "schema/97schac.ldif"
+      - "schema/98ssh.ldif"
+      - "schema/98telegram.ldif"
+      - "schema/98weeeopen.ldif"
+    -
+      role: 389ds-replication
+      replica_role: 'both'
+      suffix: "dc=example,dc=local"
+      server_uri: "ldap://localhost"
+      rootdn_password: secret2
+      use_starttls: true
+      tls_certificate_public_trusted: false
+      replication_user_password: "icauvaelae3reixeiP9ahgh0ei"
+      replication_user_password_remote: "Sahj0aedolo0aiNgusoo8onu0s" # On the other server
+      consumer_uri: "ldap://ldap1.example.local:389/" # The other server
+      begin_replication_immediately: false
+      supplier_replica_id: 2
+
+  tasks:
+  - block:
+    - name: Copy other cert
+      copy:
+        src: "{{ other_cert }}"
+        dest: "/tmp/other-cert-ansible-managed.crt"
+        mode: '400'
+        setype: cert_t
+      changed_when: false
+
+    - name: Install other certificate into NSS db
+      command: >
+        certutil -A
+        -d '/etc/dirsrv/slapd-default'
+        -n '{{ other_cert | basename | replace('.', '_') }}-ansible-managed'
+        -t 'PC,PC,PC'
+        -i '/tmp/other-cert-ansible-managed.crt'
+      changed_when: false
+
+    - name: Restart 389DS
+      service:
+        name: "dirsrv@{{ serverid }}"
+        state: restarted
+
+    always:
+    - name: Remove temporary files
+      file:
+        state: absent
+        path: "/tmp/other-cert-ansible-managed.crt"
+      changed_when: false
