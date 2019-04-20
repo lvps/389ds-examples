@@ -1,13 +1,86 @@
 ---
 - hosts: keycloak
+  vars:
+    keycloak_version: "6.0.0"
+
   roles:
     # ansible-galaxy install -p roles nkinder.keycloak
-    - {
-        role: nkinder.keycloak,
-        keycloak_version: "6.0.0",
-        keycloak_admin_password: "password"
-      }
+    #- {
+    #    role: nkinder.keycloak,
+    #    keycloak_version: "6.0.0",
+    #    keycloak_admin_password: "password"
+    #  }
+
   pre_tasks:
   - name: Set hosts file
     copy: src=hosts dest=/etc/hosts owner=root group=root
     become: true
+
+  tasks:
+  # TODO: place them in a better place (but really, with certificates from a
+  # trusted CA this is not needed...)
+  - name: Copy LDAP self-signed certificates
+    copy:
+      src: "ca/{{ item }}"
+      dest: "/opt/keycloak/keycloak-{{ keycloak_version }}/{{ item }}"
+      mode: '444'
+      seuser: unconfined_u
+      setype: cert_t
+      owner: root
+      group: root
+    become: true
+    loop:
+    - ldap1_example_local_cert.pem
+    - ldap2_example_local_cert.pem
+
+  - name: Add certificates to keystore
+    java_cert:
+      cert_alias: "{{ item[:-4] }}"
+      cert_path: "/opt/keycloak/keycloak-{{ keycloak_version }}/{{ item }}"
+      keystore_path: "/opt/keycloak/keycloak-{{ keycloak_version }}/standalone/configuration/ldap.jks"
+      keystore_pass: "password"
+      keystore_create: yes
+      state: present
+    become: true
+    loop:
+    - ldap1_example_local_cert.pem
+    - ldap2_example_local_cert.pem
+
+  - name: Create cli script to import certificates
+    copy:
+      content: |
+        # https://www.keycloak.org/docs/latest/server_installation/index.html#_truststore
+        #<spi name="truststore">
+        #    <provider name="file" enabled="true">
+        #        <properties>
+        #            <property name="file" value="ldap.jks"/>
+        #            <property name="password" value="password"/>
+        #            <property name="hostname-verification-policy" value="WILDCARD"/>
+        #            <property name="disabled" value="false"/>
+        #        </properties>
+        #    </provider>
+        #</spi>
+        /subsystem=keycloak-server/spi=truststore:add()
+        /subsystem=keycloak-server/spi=truststore/provider=file:add(enabled=true)
+        /subsystem=keycloak-server/spi=truststore/provider=file:write-attribute(name=properties, value={"file"="/opt/keycloak/keycloak-{{ keycloak_version }}/standalone/configuration/ldap.jks","password"="password","hostname-verification-policy"="WILDCARD","disabled"="false"}
+      dest: "/opt/keycloak/keycloak-{{ keycloak_version }}/standalone/configuration/ldap.cli"
+      owner: root
+      group: root
+      mode: 0400
+    become: true
+
+  - name: Apply certificates configuration
+    command:
+    args:
+      argv:
+        - "/opt/keycloak/keycloak-{{ keycloak_version }}/bin/jboss-cli.sh"
+        - "--connect"
+        #- "--timeout=30000"
+        - "--file=/opt/keycloak/keycloak-{{ keycloak_version }}/standalone/configuration/ldap.cli"
+    become: true
+
+  - name: restart keycloak
+    systemd:
+      name: keycloak
+      state: restarted
+    become: yes
