@@ -1,0 +1,33 @@
+---
+- hosts: ro-consumer
+  become: true
+
+  pre_tasks:
+  - name: Set hosts file
+    copy: src=hosts dest=/etc/hosts owner=root group=root
+
+  roles:
+    -
+      role: 389ds-server
+      suffix: "dc=example,dc=local"
+      rootdn_password: consumer
+      tls_enabled: true
+      tls_cert_file: "ca/ldap-ro-consumer_example_local_cert.pem"
+      tls_key_file: "ca/ldap-ro-consumer_example_local.key"
+      tls_files_remote: false
+      tls_certificate_trusted: false
+      tls_enforced: true
+      password_storage_scheme: "PBKDF2_SHA256"
+      plugins_enabled:
+        MemberOf Plugin: true
+    -
+      role: 389ds-replication
+      replica_role: 'consumer'
+      suffix: "dc=example,dc=local"
+      server_uri: "ldap://localhost"
+      rootdn_password: consumer
+      use_starttls: true
+      tls_certificate_public_trusted: false
+      replication_user_password: "aiGhauD4angai2aif3"
+      consumer_referral_to_supplier: "ldap://ldap-ro-supplier.example.local:389/"
+

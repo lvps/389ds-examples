@@ -177,12 +177,104 @@ export VAGRANT_VAGRANTFILE=Vagrantfile-multimaster-keycloak
 vagrant up
 ```
 
+## Supplier and consumer
+
+Two servers: one is a supplier, the other is a read-only consumer.
+
+Generate certificates:
+
+```shell
+cd ca
+./cert.sh ldap-ro-consumer.example.local
+./cert.sh ldap-ro-supplier.example.local
+```
+
+Then start the VM:
+
+```shell
+export VAGRANT_VAGRANTFILE=Vagrantfile-roreplica
+vagrant up
+```
+
+And you will get these:
+
+| Vagrant name | Hostname                       | IP         |
+|--------------|--------------------------------|------------|
+| ro-supplier  | ldap-ro-supplier.example.local | 10.38.9.31 |
+| ro-consumer  | ldap-ro-consumer.example.local | 10.38.9.32 |
+
+Bind DN is `cn=Directory Manager`, password `supplier` or `consumer`. Use LDAPS (port 636) or StartTLS (port 389).
+
+As usual, there's a manual step to start replication: connect to ro-supplier and
+navigate to `cn=agreement_with_ldap-ro-consumer_example_local,cn=replica,cn=dc\3Dexample\,dc\3Dlocal,cn=mapping tree,cn=config`.
+
+Replication is enabled by default (`nsds5ReplicaEnabled: on`), but you should
+see the usual error in `nsds5ReplicaLastUpdateStatus`:
+
+> Error (19) Replication error acquiring replica: Replica has different database generation ID, remote replica may need to be initialized (RUV error)
+
+Add `nsds5BeginReplicaRefresh: start` and it should change to:
+
+> Error (0) Replica acquired successfully: Incremental update succeeded
+
+This operation destroyed the database ad ldap-ro-consumer.example.local and
+replaced it with the database from ldap-ro-supplier.example.local, so replication
+is now active.
+
+A more detailed explanation of these steps and TLS configuration can be found in
+the "Multi-master with 2 masters" example.
+
+### Testing
+
+To test if replcation is working, add an entry on ldap-ro-supplier.example.local,
+e.g. to `ou=People,dn=example,dn=local`, and it will appear instantly on
+ldap-ro-consumer.example.local.
+
+However, if you try to add an entry on ldap-ro-consumer.example.local, it will
+answer with a referral to the supplier server since consumer is read only.
+
+For example, from the command line:
+
+```shell
+[vagrant@ldap-ro-consumer ~]$ ldapadd -ZZ -x -D "cn=Directory Manager" -W -f test.ldif
+Enter LDAP Password:
+adding new entry "cn=Foo,ou=People,dc=example,dc=local"
+ldap_add: Referral (10)
+        matched DN: dc=example,dc=local
+        referrals:
+                ldap://ldap-ro-supplier.example.local:389
+```
+
+and nothing gets actually added. You can access the command line on the VMs with
+`vagrant ssh ro-consumer` like I did, or use your host machine by specifying
+ldap-ro-consumer.example.local as the server, the rest of the command is the same.
+
+`test.ldif` contained this:
+
+```
+dn: cn=Foo,ou=People,dc=example,dc=local
+objectClass: person
+cn: Foo
+sn: Bar
+```
+
+Note that you have to disable certificate checking in the OpenLDAP tools to use
+`ldapadd`, since it does not recognize the self signed certificate. This is fine
+in testing, but don't do it in production!
+
+Edit /etc/openldap/ldap.conf and add:
+
+```
+HOST ldap-ro-consumer.example.local
+PORT 389
+TLS_REQCERT NEVER
+```
+
 ## Coming "soon"
 
 I'll add these examples some day in the future. If you're interested, open an
 issue and I'll try to add them sooner.
 
-- Dedicated supplier + dedicated consumer, possibly the simplest replication scenario
 - 2 masters + 2 read-only replicas, the example from figure 15.2 in the Administration Guide
 - Multi-master with 4 masters in a circle, the example from figure 15.3 in the Administration Guide
 - Something with hubs, maybe? This will require modifications to the role...
