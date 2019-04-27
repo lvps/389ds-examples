@@ -278,3 +278,7 @@ issue and I'll try to add them sooner.
 - 2 masters + 2 read-only replicas, the example from figure 15.2 in the Administration Guide
 - Multi-master with 4 masters in a circle, the example from figure 15.3 in the Administration Guide
 - Something with hubs, maybe? This will require modifications to the role...
+
+## License
+
+MIT unless otherwise noted (some of the involved software and Ansible roles have a different license)
