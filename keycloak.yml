@@ -1,15 +1,40 @@
 ---
 - hosts: keycloak
   vars:
-    keycloak_version: "6.0.0"
+    my_keycloak_version: '6.0.0'
 
   roles:
     # ansible-galaxy install -p roles nkinder.keycloak
-    #- {
-    #    role: nkinder.keycloak,
-    #    keycloak_version: "6.0.0",
-    #    keycloak_admin_password: "password"
-    #  }
+    # Or for the time being: https://github.com/jdennis/ansible-keycloak/tree/oooq-initial
+    - {
+       role: nkinder.keycloak,
+       keycloak_version: "{{ my_keycloak_version }}",
+       keycloak_admin_password: "password"
+    }
+    # ansible-galaxy install -p roles bertvv.mariadb
+    - {
+      role: bertvv.mariadb,
+      become: true,
+      mariadb_bind_address: '0.0.0.0',
+      mariadb_root_password: 'root',
+      mariadb_databases: [{name: 'keycloak_db'}],
+      mariadb_users: [
+        {
+          name: keycloak,
+          password: keycloak,
+          priv: "keycloak_db.*:ALL,GRANT",
+          host: "127.0.0.1",
+        }
+      ]
+    }
+    # cd roles && git clone https://github.com/lvps/ansible-wildfly-mariadb-connector-j.git
+    - {
+      role: ansible-wildfly-mariadb-connector-j,
+      become: true,
+      wildfly_mariadb_connector_j_version: '2.2.3',
+      wildfly_mariadb_connector_j_path: '/opt/keycloak/keycloak-{{ my_keycloak_version }}/modules/system/layers/keycloak/org/mariadb/jdbc/main/',
+      wildfly_mariadb_connector_j_clean_old_files: true
+    }
 
   pre_tasks:
   - name: Set hosts file
@@ -17,12 +42,26 @@
     become: true
 
   tasks:
+  # Probably not really needed, keycloak shouldn't write there. The files themselves
+  # are left as owned by root, since everyone else can read them.
+  - name: Ensure owner and permissions of MariaDB Connector/J
+    file:
+      owner: keycloak
+      group: keycloak
+      path: "{{ item }}"
+    become: true
+    loop:
+    - /opt/keycloak/keycloak-6.0.0/modules/system/layers/keycloak/org # This one should already exist
+    - /opt/keycloak/keycloak-6.0.0/modules/system/layers/keycloak/org/mariadb
+    - /opt/keycloak/keycloak-6.0.0/modules/system/layers/keycloak/org/mariadb/jdbc
+    - /opt/keycloak/keycloak-6.0.0/modules/system/layers/keycloak/org/mariadb/jdbc/main
+
   # TODO: place them in a better place (but really, with certificates from a
   # trusted CA this is not needed...)
   - name: Copy LDAP self-signed certificates
     copy:
       src: "ca/{{ item }}"
-      dest: "/opt/keycloak/keycloak-{{ keycloak_version }}/{{ item }}"
+      dest: "/opt/keycloak/keycloak-{{ my_keycloak_version }}/{{ item }}"
       mode: '444'
       seuser: unconfined_u
       setype: cert_t
@@ -36,8 +75,8 @@
   - name: Add certificates to keystore
     java_cert:
       cert_alias: "{{ item[:-4] }}"
-      cert_path: "/opt/keycloak/keycloak-{{ keycloak_version }}/{{ item }}"
-      keystore_path: "/opt/keycloak/keycloak-{{ keycloak_version }}/standalone/configuration/ldap.jks"
+      cert_path: "/opt/keycloak/keycloak-{{ my_keycloak_version }}/{{ item }}"
+      keystore_path: "/opt/keycloak/keycloak-{{ my_keycloak_version }}/standalone/configuration/ldap.jks"
       keystore_pass: "password"
       keystore_create: yes
       state: present
@@ -46,41 +85,44 @@
     - ldap1_example_local_cert.pem
     - ldap2_example_local_cert.pem
 
-  - name: Create cli script to import certificates
+  - name: Copy standalone.xml
     copy:
-      content: |
-        # https://www.keycloak.org/docs/latest/server_installation/index.html#_truststore
-        #<spi name="truststore">
-        #    <provider name="file" enabled="true">
-        #        <properties>
-        #            <property name="file" value="ldap.jks"/>
-        #            <property name="password" value="password"/>
-        #            <property name="hostname-verification-policy" value="WILDCARD"/>
-        #            <property name="disabled" value="false"/>
-        #        </properties>
-        #    </provider>
-        #</spi>
-        /subsystem=keycloak-server/spi=truststore:add()
-        /subsystem=keycloak-server/spi=truststore/provider=file:add(enabled=true)
-        /subsystem=keycloak-server/spi=truststore/provider=file:write-attribute(name=properties, value={"file"="/opt/keycloak/keycloak-{{ keycloak_version }}/standalone/configuration/ldap.jks","password"="password","hostname-verification-policy"="WILDCARD","disabled"="false"}
-      dest: "/opt/keycloak/keycloak-{{ keycloak_version }}/standalone/configuration/ldap.cli"
+      src: "keycloak/standalone.xml"
+      dest: "/opt/keycloak/keycloak-{{ my_keycloak_version }}/standalone/configuration/standalone.xml"
       owner: root
       group: root
-      mode: 0400
+      mode: 0644
     become: true
 
-  - name: Apply certificates configuration
-    command:
-    args:
-      argv:
-        - "/opt/keycloak/keycloak-{{ keycloak_version }}/bin/jboss-cli.sh"
-        - "--connect"
+  #- name: Create cli script to import certificates
+    #copy:
+      #content: |
+        #/subsystem=keycloak-server/spi=truststore:add()
+        #/subsystem=keycloak-server/spi=truststore/provider=file:add(enabled=true)
+        #/subsystem=keycloak-server/spi=truststore/provider=file:write-attribute(name=properties, value={"file"="/opt/keycloak/keycloak-{{ my_keycloak_version }}/standalone/configuration/ldap.jks","password"="password","hostname-verification-policy"="WILDCARD","disabled"="false"}
+      #dest: "/opt/keycloak/keycloak-{{ my_keycloak_version }}/standalone/configuration/ldap.cli"
+      #owner: root
+      #group: root
+      #mode: 0400
+    #become: true
+
+  #- name: Apply certificates configuration
+    #command:
+    #args:
+      #argv:
+        #- "/opt/keycloak/keycloak-{{ my_keycloak_version }}/bin/jboss-cli.sh"
+        #- "--connect"
         #- "--timeout=30000"
-        - "--file=/opt/keycloak/keycloak-{{ keycloak_version }}/standalone/configuration/ldap.cli"
-    become: true
+        #- "--file=/opt/keycloak/keycloak-{{ my_keycloak_version }}/standalone/configuration/ldap.cli"
+    #become: true
 
   - name: restart keycloak
     systemd:
       name: keycloak
       state: restarted
+    become: yes
+    when: wildfly_mariadb_connector_j_changed
+
+  - name: create Keycloak admin user, again
+    command: "/opt/keycloak/keycloak-6.0.0/bin/add-user-keycloak.sh -r master -u admin -p password"
     become: yes
