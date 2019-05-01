@@ -25,11 +25,6 @@
       plugins_enabled:
         MemberOf Plugin: true
         Distributed Numeric Assignment Plugin: false
-      custom_schema:
-      - "schema/97schac.ldif"
-      - "schema/98ssh.ldif"
-      - "schema/98telegram.ldif"
-      - "schema/98weeeopen.ldif"
     -
       role: 389ds-replication
       replica_role: 'both'

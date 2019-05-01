@@ -16,8 +16,11 @@
       plugins_enabled:
         MemberOf Plugin: true
         Distributed Numeric Assignment Plugin: false
-      custom_schema:
-      - "schema/97schac.ldif"
-      - "schema/98ssh.ldif"
-      - "schema/98telegram.ldif"
-      - "schema/98weeeopen.ldif"
+      # If you want to try some random custom schema, here's one:
+      # https://github.com/WEEE-Open/schema
+      # Clone in this directory and uncomment the following lines:
+      #custom_schema:
+      #- "schema/97schac.ldif"
+      #- "schema/98ssh.ldif"
+      #- "schema/98telegram.ldif"
+      #- "schema/98weeeopen.ldif"
