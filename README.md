@@ -3,7 +3,6 @@
 Get Vagrant, get Ansible, type these commands:
 
 ```shell
-mkdir roles
 cd roles
 git clone https://github.com/lvps/389ds-server.git
 git clone https://github.com/lvps/389ds-replication.git

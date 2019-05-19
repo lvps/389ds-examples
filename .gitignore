@@ -1,6 +1,7 @@
 .vagrant/
 *.retry
-roles/*/
+roles/*
+!roles/.gitkeep
 schema/
 ca/*.pem
 ca/*.key
