@@ -4,23 +4,14 @@
   roles:
     -
       role: 389ds-server
-      suffix: "dc=example,dc=local"
-      rootdn_password: secret
-      tls_enabled: true
-      tls_cert_file: "ca/ldaptest_example_local_cert.pem"
-      tls_key_file: "ca/ldaptest_example_local.key"
-      tls_files_remote: false
-      tls_certificate_trusted: false
-      tls_enforced: true
-      password_storage_scheme: "PBKDF2_SHA256"
-      plugins_enabled:
+      dirsrv_suffix: "dc=example,dc=local"
+      dirsrv_rootdn_password: secret
+      dirsrv_tls_enabled: true
+      dirsrv_tls_cert_file: "ca/ldaptest_example_local_cert.pem"
+      dirsrv_tls_key_file: "ca/ldaptest_example_local.key"
+      dirsrv_tls_files_remote: false
+      dirsrv_tls_certificate_trusted: false
+      dirsrv_tls_enforced: true
+      dirsrv_password_storage_scheme: "PBKDF2_SHA256"
+      dirsrv_plugins_enabled:
         MemberOf Plugin: true
-        Distributed Numeric Assignment Plugin: false
-      # If you want to try some random custom schema, here's one:
-      # https://github.com/WEEE-Open/schema
-      # Clone in this directory and uncomment the following lines:
-      #custom_schema:
-      #- "schema/97schac.ldif"
-      #- "schema/98ssh.ldif"
-      #- "schema/98telegram.ldif"
-      #- "schema/98weeeopen.ldif"

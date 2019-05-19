@@ -16,8 +16,8 @@ fi
 # https://stackoverflow.com/a/4774063
 HERE="$( cd "$(dirname "$0")" ; pwd -P )"
 echo --- Add this to the playbook ---
-echo "tls_cert_file: \"$HERE/${ID}_cert.pem\""
-echo "tls_key_file: \"$HERE/${ID}.key\""
-echo "tls_files_remote: false"
-echo "tls_certificate_trusted: false"
+echo "dirsrv_tls_cert_file: \"$HERE/${ID}_cert.pem\""
+echo "dirsrv_tls_key_file: \"$HERE/${ID}.key\""
+echo "dirsrv_tls_files_remote: false"
+echo "dirsrv_tls_certificate_trusted: false"
 echo --------------------------------

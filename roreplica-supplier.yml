@@ -12,29 +12,29 @@
   roles:
     -
       role: 389ds-server
-      suffix: "dc=example,dc=local"
-      rootdn_password: supplier
-      tls_enabled: true
-      tls_cert_file: "ca/ldap-ro-supplier_example_local_cert.pem"
-      tls_key_file: "ca/ldap-ro-supplier_example_local.key"
-      tls_files_remote: false
-      tls_certificate_trusted: false
-      tls_enforced: true
-      password_storage_scheme: "PBKDF2_SHA256"
-      plugins_enabled:
+      dirsrv_suffix: "dc=example,dc=local"
+      dirsrv_rootdn_password: supplier
+      dirsrv_tls_enabled: true
+      dirsrv_tls_cert_file: "ca/ldap-ro-supplier_example_local_cert.pem"
+      dirsrv_tls_key_file: "ca/ldap-ro-supplier_example_local.key"
+      dirsrv_tls_files_remote: false
+      dirsrv_tls_certificate_trusted: false
+      dirsrv_tls_enforced: true
+      dirsrv_password_storage_scheme: "PBKDF2_SHA256"
+      dirsrv_plugins_enabled:
         MemberOf Plugin: true
     -
-      role: 389ds-replication
-      replica_role: 'supplier'
-      suffix: "dc=example,dc=local"
-      server_uri: "ldap://localhost"
-      rootdn_password: supplier
-      use_starttls: true
-      tls_certificate_public_trusted: false
-      replication_user_password_remote: "aiGhauD4angai2aif3" # Password for the other server (Replication Manager user)
-      consumer_uri: "ldap://ldap-ro-consumer.example.local:389/" # The other server
-      begin_replication_immediately: true
-      supplier_replica_id: 1
+      dirsrv_role: 389ds-replication
+      dirsrv_replica_role: 'supplier'
+      dirsrv_suffix: "dc=example,dc=local"
+      dirsrv_uri: "ldap://localhost"
+      dirsrv_rootdn_password: supplier
+      dirsrv_use_starttls: true
+      dirsrv_tls_certificate_public_trusted: false
+      dirsrv_replication_user_password_remote: "aiGhauD4angai2aif3" # Password for the other server (Replication Manager user)
+      dirsrv_consumer_uri: "ldap://ldap-ro-consumer.example.local:389/" # The other server
+      dirsrv_begin_replication_immediately: true
+      dirsrv_supplier_replica_id: 1
 
   tasks:
   - block:
@@ -61,7 +61,7 @@
     # Detecting when something changed is too complicated
     - name: Restart 389DS
       service:
-        name: "dirsrv@{{ serverid }}"
+        name: "dirsrv@{{ dirsrv_serverid }}"
         state: restarted
 
     always:
