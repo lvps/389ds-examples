@@ -24,13 +24,13 @@
       dirsrv_plugins_enabled:
         MemberOf Plugin: true
     -
-      dirsrv_role: 389ds-replication
+      role: 389ds-replication
       dirsrv_replica_role: 'supplier'
       dirsrv_suffix: "dc=example,dc=local"
       dirsrv_uri: "ldap://localhost"
       dirsrv_rootdn_password: supplier
       dirsrv_use_starttls: true
-      dirsrv_tls_certificate_public_trusted: false
+      dirsrv_tls_certificate_trusted: false
       dirsrv_replication_user_password_remote: "aiGhauD4angai2aif3" # Password for the other server (Replication Manager user)
       dirsrv_consumer_uri: "ldap://ldap-ro-consumer.example.local:389/" # The other server
       dirsrv_begin_replication_immediately: true

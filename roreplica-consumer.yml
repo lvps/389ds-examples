@@ -27,7 +27,7 @@
       dirsrv_uri: "ldap://localhost"
       dirsrv_rootdn_password: consumer
       dirsrv_use_starttls: true
-      dirsrv_tls_certificate_public_trusted: false
+      dirsrv_tls_certificate_trusted: false
       dirsrv_replication_user_password: "aiGhauD4angai2aif3"
       dirsrv_consumer_referral_to_supplier: "ldap://ldap-ro-supplier.example.local:389/"
 
