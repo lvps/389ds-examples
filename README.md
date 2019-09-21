@@ -264,7 +264,7 @@ issue and I'll try to add them sooner.
 
 ## See also
 
-If you're interested in running WSO2 IS on top of 389DS or want to see some ACIs configured with Ansible, there's [another repository](https://github.com/WEEE-Open/sso) with an example.
+If you're interested in running Keycloak or WSO2 IS on top of 389DS there's [another repository](https://github.com/WEEE-Open/sso) that can provide some hints. If you want some ACIs or custom schema files to deploy via Ansible, there's the [schema](https://github.com/weee-open/schema) repository.
 
 ## License
 
